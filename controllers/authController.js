@@ -16,35 +16,45 @@ const register = (req, res) => {
     res.status(201).json({ message: "Usuario registrado exitosamente" });
   });
 };
-
 const login = (req, res) => {
-  const { dni, password } = req.body;
+  const { dni, contrasena } = req.body;
 
   findUserByDni(dni, (err, user) => {
     if (err) {
       console.error("Error al buscar usuario:", err);
       return res.status(500).json({ error: "Error en el servidor" });
     }
+
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    comparePassword(password, user.password, (err, isMatch) => {
+    comparePassword(contrasena, user.contrasena, (err, isMatch) => {
       if (err) {
         console.error("Error al comparar contraseñas:", err);
         return res.status(500).json({ error: "Error en el servidor" });
       }
+
       if (!isMatch) {
         return res.status(401).json({ error: "Contraseña incorrecta" });
       }
 
       const token = jwt.sign(
-        { id: user.id, dni: user.dni },
+        {
+          id: user.id_usuario,
+          dni: user.dni,
+        },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
 
-      res.status(200).json({ message: "Login exitoso", token });
+      const { contrasena, ...safeUser } = user;
+
+      res.status(200).json({
+        message: "Login exitoso",
+        token,
+        user: safeUser,
+      });
     });
   });
 };

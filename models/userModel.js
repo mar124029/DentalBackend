@@ -53,33 +53,26 @@ const saltRounds = 10;
 // module.exports = { createUser, findUserByDni, comparePassword };
 
 const createUser = (user, callback) => {
-  const {
-    nombre,
-    dni,
-    nacimiento,
-    telefono,
-    correo,
-    password,
-    rolId = 1,
-  } = user;
+  const { nombre, apellido, dni, nacimiento, telefono, correo, password } =
+    user;
 
   bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
     if (err) return callback(err);
 
     const query = `
-      INSERT INTO usuarios (nombre, dni, nacimiento, telefono, correo, password, rol_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *;
+    INSERT INTO usuarios (nombre, apellido, dni, fecha_nacimiento, numero_telefono, correo_electronico, contrasena)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING *;
     `;
 
     const values = [
       nombre,
+      apellido,
       dni,
       nacimiento,
       telefono,
       correo,
       hashedPassword,
-      rolId,
     ];
 
     db.query(query, values, (err, result) => {
