@@ -4,6 +4,7 @@ const {
   findUserByDni,
   comparePassword,
 } = require("../models/userModel");
+const db = require("../config/db");
 
 const register = (req, res) => {
   const user = req.body;
@@ -19,33 +20,26 @@ const register = (req, res) => {
 const login = (req, res) => {
   const { dni, contrasena } = req.body;
 
-  findUserByDni(dni, (err, user) => {
-    if (err) {
-      console.error("Error al buscar usuario:", err);
-      return res.status(500).json({ error: "Error en el servidor" });
+  findUserByDni(dni, async (err, user) => {
+    if (err || !user) {
+      return res.status(401).json({ mensaje: "Credenciales inválidas" });
     }
 
-    if (!user) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
-    }
-
-    comparePassword(contrasena, user.contrasena, (err, isMatch) => {
-      if (err) {
-        console.error("Error al comparar contraseñas:", err);
-        return res.status(500).json({ error: "Error en el servidor" });
+    comparePassword(contrasena, user.contrasena, async (err, isMatch) => {
+      if (err || !isMatch) {
+        return res.status(401).json({ mensaje: "Credenciales inválidas" });
       }
 
-      if (!isMatch) {
-        return res.status(401).json({ error: "Contraseña incorrecta" });
-      }
+      const query = `SELECT id_rol FROM usuarios_roles WHERE id_usuario = $1`;
+      const result = await db.query(query, [user.id_usuario]);
 
       const token = jwt.sign(
         {
-          id: user.id_usuario,
-          dni: user.dni,
+          id_usuario: user.id_usuario,
+          id_rol: result.rows[0]?.id_rol,
         },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "2h" }
       );
 
       const { contrasena, ...safeUser } = user;

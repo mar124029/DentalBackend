@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
+const promocionRoutes = require("./routes/promocionRoutes");
 const { verifyToken } = require("./middleware/verifyToken");
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(bodyParser.json());
 app.use(morgan("dev"));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/promociones", promocionRoutes);
 
 app.get("/api/protected", verifyToken, (req, res) => {
   res.json({ message: "Este es un recurso protegido", user: req.user });
