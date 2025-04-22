@@ -17,6 +17,7 @@ const register = (req, res) => {
     res.status(201).json({ message: "Usuario registrado exitosamente" });
   });
 };
+
 const login = (req, res) => {
   const { dni, contrasena } = req.body;
 
@@ -33,10 +34,16 @@ const login = (req, res) => {
       const query = `SELECT id_rol FROM usuarios_roles WHERE id_usuario = $1`;
       const result = await db.query(query, [user.id_usuario]);
 
+      // Obtener el nombre del rol
+      const roleQuery = `SELECT nombre_rol FROM roles WHERE id_rol = $1`;
+      const roleResult = await db.query(roleQuery, [result.rows[0]?.id_rol]);
+      const roleName = roleResult.rows[0]?.nombre_rol;
+
       const token = jwt.sign(
         {
           id_usuario: user.id_usuario,
           id_rol: result.rows[0]?.id_rol,
+          rol: roleName, // Añadimos el nombre del rol al JWT
         },
         process.env.JWT_SECRET,
         { expiresIn: "2h" }
